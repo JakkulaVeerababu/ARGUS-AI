@@ -1,10 +1,13 @@
 import os
 from backend.app.utils.docx import parse_docx_text
 
+
 class JDLoader:
     def __init__(self, default_path: str = None):
         self.default_path = default_path or os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "../../../data/job_description.docx")
+            os.path.join(
+                os.path.dirname(__file__), "../../../data/job_description.docx"
+            )
         )
 
     def load_jd(self, file_path: str = None) -> str:
@@ -16,6 +19,7 @@ class JDLoader:
             with open(target_path, "r", encoding="utf-8") as f:
                 return f.read()
         return parse_docx_text(target_path)
+
 
 if __name__ == "__main__":
     loader = JDLoader()

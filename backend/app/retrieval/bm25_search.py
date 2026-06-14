@@ -1,6 +1,6 @@
-import os
 from typing import List, Tuple
 from backend.app.retrieval.bm25_index import BM25Searcher
+
 
 class BM25Search:
     def __init__(self, cache_path: str = None):
@@ -14,6 +14,7 @@ class BM25Search:
         """
         scores = self.searcher.score_candidates(query)
         return scores[:top_k]
+
 
 if __name__ == "__main__":
     try:

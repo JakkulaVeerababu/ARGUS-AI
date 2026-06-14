@@ -2,6 +2,7 @@ import os
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+
 class Settings(BaseSettings):
     ENV: str = "production"
     DEBUG: bool = False
@@ -30,9 +31,8 @@ class Settings(BaseSettings):
     LOG_DIR: str = os.path.join(BASE_DIR, "logs")
 
     model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
+        env_file=".env", env_file_encoding="utf-8", extra="ignore"
     )
+
 
 settings = Settings()

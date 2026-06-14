@@ -7,11 +7,12 @@ from backend.app.core.cache_manager import CacheManager
 
 router = APIRouter()
 
+
 @router.get("/health")
 def health_check(response: Response):
     """
     Comprehensive health check verifying SQLite connectivity,
-    cache health (Redis connection status or local LRU active), 
+    cache health (Redis connection status or local LRU active),
     and ONNX model registry warmup status.
     """
     health_status = "healthy"
@@ -47,7 +48,10 @@ def health_check(response: Response):
     # 3. Verify Model Registry
     try:
         registry = ModelRegistry()
-        if registry._hybrid_searcher is not None and registry._reranking_manager is not None:
+        if (
+            registry._hybrid_searcher is not None
+            and registry._reranking_manager is not None
+        ):
             checks["models"] = "healthy (warmed up)"
         else:
             checks["models"] = "unhealthy (not initialized)"
@@ -60,8 +64,4 @@ def health_check(response: Response):
     if health_status == "unhealthy":
         response.status_code = status.HTTP_503_SERVICE_UNAVAILABLE
 
-    return {
-        "status": health_status,
-        "timestamp": time.time(),
-        "checks": checks
-    }
+    return {"status": health_status, "timestamp": time.time(), "checks": checks}

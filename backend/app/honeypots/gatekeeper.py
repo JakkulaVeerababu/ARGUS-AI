@@ -1,18 +1,20 @@
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 from backend.app.honeypots.salary_rules import check_salary_violation
 from backend.app.honeypots.timeline_rules import check_timeline_violation
 from backend.app.honeypots.skill_rules import check_skill_violation
 from backend.app.honeypots.certification_rules import check_certification_violation
 
+
 def calculate_inactivity_months(last_active_str: str) -> float:
     """Computes elapsed months from last_active_str to June 2026."""
     try:
-        y, m, _ = map(int, last_active_str.split('-'))
+        y, m, _ = map(int, last_active_str.split("-"))
         # Reference local date context is June 14, 2026
         return (2026 - y) * 12 + (6 - m)
     except Exception:
         return 0.0
+
 
 def evaluate_candidate_risk(candidate: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -27,16 +29,16 @@ def evaluate_candidate_risk(candidate: Dict[str, Any]) -> Dict[str, Any]:
     """
     cid = candidate.get("candidate_id")
     signals = candidate.get("redrob_signals", {})
-    
+
     # 1. Hard Honeypot Checks
     salary_viol = check_salary_violation(candidate)
     timeline_viol = check_timeline_violation(candidate)
     skill_viol = check_skill_violation(candidate)
     cert_viol = check_certification_violation(candidate)
-    
+
     reasons = []
     honeypot_flag = False
-    
+
     if salary_viol:
         reasons.append("Salary min > max")
         honeypot_flag = True
@@ -49,9 +51,9 @@ def evaluate_candidate_risk(candidate: Dict[str, Any]) -> Dict[str, Any]:
     if cert_viol:
         reasons.append("Certification date in future (>2026)")
         honeypot_flag = True
-        
+
     risk_score = 0.0
-    
+
     if honeypot_flag:
         risk_score = 1.0
     else:
@@ -61,26 +63,27 @@ def evaluate_candidate_risk(candidate: Dict[str, Any]) -> Dict[str, Any]:
         if completeness < 50.0:
             risk_score += 0.20
             reasons.append(f"Low profile completeness ({completeness:.1f}%)")
-            
+
         # Notice Period > 90 days
         notice_days = signals.get("notice_period_days", 0)
         if notice_days > 90:
             risk_score += 0.20
             reasons.append(f"Long notice period ({notice_days} days)")
-            
+
         # Inactivity for > 6 months
         last_active = signals.get("last_active_date", "2026-06-14")
         inactivity = calculate_inactivity_months(last_active)
         if inactivity > 6.0:
             risk_score += 0.20
             reasons.append(f"Inactive for {inactivity:.1f} months")
-            
+
     return {
         "candidate_id": cid,
         "honeypot_flag": honeypot_flag,
         "risk_score": min(1.0, risk_score),
-        "reasons": reasons
+        "reasons": reasons,
     }
+
 
 if __name__ == "__main__":
     # Diagnostic test for risk evaluator
@@ -89,8 +92,8 @@ if __name__ == "__main__":
         "redrob_signals": {
             "profile_completeness_score": 40.0,
             "notice_period_days": 120,
-            "last_active_date": "2025-10-01"
-        }
+            "last_active_date": "2025-10-01",
+        },
     }
     res = evaluate_candidate_risk(test_cand)
     print("Risk Assessment:")

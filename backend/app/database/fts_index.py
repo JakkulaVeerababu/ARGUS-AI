@@ -8,9 +8,11 @@ Complexity: O(log N) search retrieval.
 Production Concerns: Escaping special MATCH syntax parameters to prevent database query failures; negating SQLite's native bm25() score (since lower is better by default in FTS5).
 Future Improvements: Support custom term weights and phrase proximity matching (e.g. using NEAR/5 operators).
 """
+
 import re
 from typing import List, Tuple, Optional
 from backend.app.database.sqlite_manager import SQLiteManager
+
 
 class FTSIndexManager:
     def __init__(self, manager: Optional[SQLiteManager] = None):
@@ -36,13 +38,13 @@ class FTSIndexManager:
             cleaned = self.clean_query_term(word)
             if cleaned:
                 sanitized_words.append(cleaned)
-                
+
         if not sanitized_words:
             return []
-            
+
         # Join words with OR operator to match lexical search behavior
         match_expression = " OR ".join(sanitized_words)
-        
+
         sql = """
             SELECT candidate_id, -bm25(candidate_fts) as fts_score 
             FROM candidate_fts 
@@ -50,6 +52,6 @@ class FTSIndexManager:
             ORDER BY fts_score DESC 
             LIMIT ?
         """
-        
+
         rows = self.db.execute_read(sql, (match_expression, limit))
         return [(row["candidate_id"], float(row["fts_score"])) for row in rows]

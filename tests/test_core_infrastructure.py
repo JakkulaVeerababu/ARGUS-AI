@@ -1,11 +1,9 @@
-import pytest
 import time
-from fastapi.testclient import TestClient
 
 from backend.app.core.settings import settings
 from backend.app.core.cache_manager import CacheManager, TTLLRUCache
 from backend.app.core.model_registry import ModelRegistry
-from backend.app.main import app
+
 
 def test_settings_load():
     """Verify that pydantic-settings loads default config values correctly."""
@@ -13,6 +11,7 @@ def test_settings_load():
     assert settings.HOST == "0.0.0.0"
     assert settings.ENV in ["production", "development", "test"]
     assert settings.DATABASE_PATH is not None
+
 
 def test_ttl_lru_cache_eviction_and_expiry():
     """Verify in-memory TTL LRU cache eviction and timing policies."""
@@ -27,11 +26,11 @@ def test_ttl_lru_cache_eviction_and_expiry():
     assert cache.get("b") == 20
     assert cache.get("c") == 30
 
-    # 2. Verify LRU Eviction: Accessing 'a' makes it MRU. 
+    # 2. Verify LRU Eviction: Accessing 'a' makes it MRU.
     # Adding 'd' should evict 'b' (since 'b' is the least recently accessed of remaining b, c).
     cache.get("a")  # 'a' becomes MRU
     cache.set("d", 40)
-    
+
     assert cache.get("b") is None  # Evicted
     assert cache.get("a") == 10
     assert cache.get("c") == 30
@@ -43,11 +42,13 @@ def test_ttl_lru_cache_eviction_and_expiry():
     time.sleep(1.1)
     assert cache.get("timed") is None  # Expired
 
+
 def test_cache_manager_singleton():
     """Verify CacheManager is a singleton."""
     cm1 = CacheManager()
     cm2 = CacheManager()
     assert cm1 is cm2
+
 
 def test_model_registry_singleton():
     """Verify ModelRegistry is a singleton."""
@@ -55,19 +56,23 @@ def test_model_registry_singleton():
     mr2 = ModelRegistry()
     assert mr1 is mr2
 
+
 def test_health_endpoint():
     """Verify the health endpoint responds and contains checks schema by direct call."""
     from backend.app.core.health import health_check
     from fastapi import Response
+
     response = Response()
     data = health_check(response)
     assert "status" in data
     assert "timestamp" in data
     assert "checks" in data
 
+
 def test_metrics_endpoint():
     """Verify the metrics endpoint returns correct metrics keys by direct call."""
     from backend.app.core.metrics import get_metrics
+
     data = get_metrics()
     assert "request_metrics" in data
     assert "cache_metrics" in data

@@ -1,13 +1,14 @@
 import time
 from contextlib import contextmanager
 
+
 class RuntimeProfiler:
     def __init__(self):
         self.metrics = {
             "embedding_time": 0.0,
             "faiss_time": 0.0,
             "cross_encoder_time": 0.0,
-            "total_latency": 0.0
+            "total_latency": 0.0,
         }
         self.start_time = None
 

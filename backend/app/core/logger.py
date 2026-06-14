@@ -3,6 +3,7 @@ import sys
 from loguru import logger
 from backend.app.core.settings import settings
 
+
 def setup_logger():
     """Configures Loguru to handle stdout logging and file-based routing."""
     # Remove all pre-existing handlers
@@ -16,7 +17,7 @@ def setup_logger():
         sys.stdout,
         level=settings.LOG_LEVEL,
         format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-        enqueue=True
+        enqueue=True,
     )
 
     # Filter Functions
@@ -40,7 +41,7 @@ def setup_logger():
         format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
         rotation="10 MB",
         retention="7 days",
-        enqueue=True
+        enqueue=True,
     )
 
     # 3. ranking.log File Handler
@@ -51,7 +52,7 @@ def setup_logger():
         format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
         rotation="10 MB",
         retention="7 days",
-        enqueue=True
+        enqueue=True,
     )
 
     # 4. errors.log File Handler (Stores ERROR and CRITICAL levels)
@@ -62,7 +63,7 @@ def setup_logger():
         format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}\n{exception}",
         rotation="10 MB",
         retention="14 days",
-        enqueue=True
+        enqueue=True,
     )
 
     logger.info("Logger configuration complete. Logs routed to stdout and log files.")

@@ -5,12 +5,18 @@ from typing import List, Any, Callable, Tuple, Union
 from backend.app.inference.cross_encoder_service import CrossEncoderService
 from backend.app.inference.embedding_service import EmbeddingService
 
+
 class BatchScheduler:
-    def __init__(self, process_batch_fn: Callable[[List[Any]], List[Any]], max_batch_size: int = 32, max_delay_seconds: float = 0.005):
+    def __init__(
+        self,
+        process_batch_fn: Callable[[List[Any]], List[Any]],
+        max_batch_size: int = 32,
+        max_delay_seconds: float = 0.005,
+    ):
         self.process_batch_fn = process_batch_fn
         self.max_batch_size = max_batch_size
         self.max_delay_seconds = max_delay_seconds
-        
+
         self.queue = queue.Queue()
         self.lock = threading.Lock()
         self.running = False
@@ -21,7 +27,9 @@ class BatchScheduler:
         with self.lock:
             if not self.running:
                 self.running = True
-                self.worker_thread = threading.Thread(target=self._worker_loop, daemon=True)
+                self.worker_thread = threading.Thread(
+                    target=self._worker_loop, daemon=True
+                )
                 self.worker_thread.start()
 
     def stop(self):
@@ -48,21 +56,21 @@ class BatchScheduler:
         """
         if not items:
             return []
-            
+
         if not self.running:
             self.start()
-            
+
         events = [threading.Event() for _ in items]
         result_holders = [[] for _ in items]
-        
+
         # Enqueue all items with their tracking events
         for item, event, holder in zip(items, events, result_holders):
             self.queue.put((item, event, holder))
-            
+
         # Wait for all items to be processed
         for event in events:
             event.wait()
-            
+
         # Re-assemble results
         results = []
         for holder in result_holders:
@@ -83,15 +91,15 @@ class BatchScheduler:
                 if first_item_tuple is None:
                     self.queue.task_done()
                     break
-                    
+
                 batch = [first_item_tuple]
                 start_time = time.time()
-                
+
                 # Pool more items until batch size limit or delay limit is hit
                 while len(batch) < self.max_batch_size:
                     time_elapsed = time.time() - start_time
                     time_remaining = max(0.0, self.max_delay_seconds - time_elapsed)
-                    
+
                     try:
                         item_tuple = self.queue.get(timeout=time_remaining)
                         if item_tuple is None:
@@ -101,15 +109,17 @@ class BatchScheduler:
                         batch.append(item_tuple)
                     except queue.Empty:
                         break
-                
+
                 # Process the gathered batch
                 if batch:
                     inputs = [b[0] for b in batch]
                     try:
                         outputs = self.process_batch_fn(inputs)
                         if len(outputs) != len(batch):
-                            raise ValueError(f"Batch function returned {len(outputs)} results for {len(batch)} inputs.")
-                            
+                            raise ValueError(
+                                f"Batch function returned {len(outputs)} results for {len(batch)} inputs."
+                            )
+
                         for (item, event, holder), output in zip(batch, outputs):
                             holder.append(output)
                             event.set()
@@ -120,7 +130,7 @@ class BatchScheduler:
                             holder.append(e)
                             event.set()
                             self.queue.task_done()
-                            
+
             except Exception as e:
                 print(f"Unexpected error in scheduler worker: {e}")
                 time.sleep(0.01)
@@ -144,8 +154,7 @@ class CrossEncoderScheduler:
             self._initialized = True
             self.service = service or CrossEncoderService()
             self.scheduler = BatchScheduler(
-                process_batch_fn=self._process_batch,
-                max_batch_size=max_batch_size
+                process_batch_fn=self._process_batch, max_batch_size=max_batch_size
             )
             self.scheduler.start()
 
@@ -175,8 +184,7 @@ class EmbeddingScheduler:
             self._initialized = True
             self.service = service or EmbeddingService()
             self.scheduler = BatchScheduler(
-                process_batch_fn=self._process_batch,
-                max_batch_size=max_batch_size
+                process_batch_fn=self._process_batch, max_batch_size=max_batch_size
             )
             self.scheduler.start()
 
@@ -187,6 +195,7 @@ class EmbeddingScheduler:
 
     def encode(self, texts: Union[str, List[str]], *args, **kwargs) -> Any:
         import numpy as np
+
         is_single = isinstance(texts, str)
         if is_single:
             texts = [texts]

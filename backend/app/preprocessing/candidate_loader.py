@@ -4,6 +4,7 @@ import gzip
 from typing import Generator, Dict, Any, List
 from backend.app.preprocessing.candidate_parser import parse_candidate
 
+
 class CandidateLoader:
     def __init__(self, filepath: str = None):
         # Default target dataset location
@@ -18,7 +19,7 @@ class CandidateLoader:
         """
         if not os.path.exists(self.filepath):
             raise FileNotFoundError(f"Candidate dataset not found at: {self.filepath}")
-            
+
         if self.filepath.endswith(".gz"):
             open_func = gzip.open
             mode = "rt"
@@ -44,6 +45,7 @@ class CandidateLoader:
             if limit > 0 and count >= limit:
                 break
         return candidates
+
 
 if __name__ == "__main__":
     # Diagnostic test for memory-safe loader

@@ -4,8 +4,10 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
+
 class MetricsCollector:
     """Thread-safe collector for server performance metrics."""
+
     _instance = None
     _lock = threading.Lock()
 
@@ -25,7 +27,7 @@ class MetricsCollector:
             self.error_count = 0
             self.cache_hits = 0
             self.cache_misses = 0
-            
+
             self.latencies: List[float] = []
             self.inference_latencies: List[float] = []
             self.max_records = 1000  # Avoid memory leaks by capping metrics history
@@ -55,6 +57,7 @@ class MetricsCollector:
 
     def get_stats(self) -> Dict:
         with self._lock:
+
             def percentile(data: List[float], percent: float) -> float:
                 if not data:
                     return 0.0
@@ -66,15 +69,23 @@ class MetricsCollector:
                     return sorted_data[f] + (k - f) * (sorted_data[c] - sorted_data[f])
                 return sorted_data[f]
 
-            avg_lat = sum(self.latencies) / len(self.latencies) if self.latencies else 0.0
+            avg_lat = (
+                sum(self.latencies) / len(self.latencies) if self.latencies else 0.0
+            )
             p50_lat = percentile(self.latencies, 0.50)
             p90_lat = percentile(self.latencies, 0.90)
             p99_lat = percentile(self.latencies, 0.99)
 
-            avg_inf = sum(self.inference_latencies) / len(self.inference_latencies) if self.inference_latencies else 0.0
+            avg_inf = (
+                sum(self.inference_latencies) / len(self.inference_latencies)
+                if self.inference_latencies
+                else 0.0
+            )
 
             total_cache_reqs = self.cache_hits + self.cache_misses
-            cache_hit_rate = (self.cache_hits / total_cache_reqs) if total_cache_reqs > 0 else 0.0
+            cache_hit_rate = (
+                (self.cache_hits / total_cache_reqs) if total_cache_reqs > 0 else 0.0
+            )
 
             return {
                 "request_metrics": {
@@ -93,10 +104,12 @@ class MetricsCollector:
                 "inference_metrics": {
                     "total_inferences": len(self.inference_latencies),
                     "avg_inference_latency_seconds": round(avg_inf, 4),
-                }
+                },
             }
 
+
 metrics_collector = MetricsCollector()
+
 
 @router.get("/metrics")
 def get_metrics():

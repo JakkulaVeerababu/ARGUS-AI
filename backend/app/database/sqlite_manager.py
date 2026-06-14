@@ -8,10 +8,12 @@ Complexity: O(1) connection setup.
 Production Concerns: Concurrent database access; enabling WAL mode to allow readers to proceed while writers write; thread safety.
 Future Improvements: Support full connection pooling if database write traffic scales heavily.
 """
+
 import sqlite3
 import threading
 import os
 from typing import Optional
+
 
 class SQLiteManager:
     _instance = None
@@ -27,26 +29,26 @@ class SQLiteManager:
     def __init__(self, db_path: Optional[str] = None):
         if getattr(self, "_initialized", False):
             return
-            
+
         self.db_path = db_path or os.path.abspath(
             os.path.join(os.path.dirname(__file__), "../../../data/argus_ai.db")
         )
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
-        
+
         # Establish connection. check_same_thread=False allows sharing across FastAPI worker threads.
         self.conn = sqlite3.connect(
             self.db_path,
             check_same_thread=False,
-            timeout=30.0  # Avoid database locked errors under concurrency
+            timeout=30.0,  # Avoid database locked errors under concurrency
         )
         self.conn.row_factory = sqlite3.Row
-        
+
         # Configure PRAGMA parameters
         # WAL (Write-Ahead Logging) allows concurrent reads while writes are active
         self.conn.execute("PRAGMA journal_mode=WAL;")
         self.conn.execute("PRAGMA foreign_keys=ON;")
         self.conn.commit()
-        
+
         self._initialized = True
 
     def get_connection(self) -> sqlite3.Connection:

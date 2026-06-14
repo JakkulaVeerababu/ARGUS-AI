@@ -1,5 +1,6 @@
 from typing import Dict, Any
 
+
 def explain_title(candidate: Dict[str, Any]) -> str:
     """
     Extracts and formats the candidate's current title for template insertion.

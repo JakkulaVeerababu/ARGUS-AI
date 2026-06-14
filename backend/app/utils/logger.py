@@ -23,12 +23,15 @@ logger.add(
     diagnose=True,
 )
 
+
 # Filter functions for routing logs
 def filter_api(record):
     return record["extra"].get("channel") == "api"
 
+
 def filter_ranking(record):
     return record["extra"].get("channel") == "ranking"
+
 
 # 2. API Log Handler - Log requests and api flows
 logger.add(

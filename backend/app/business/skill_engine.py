@@ -10,7 +10,9 @@ Complexity: O(C * (M + N)) where C is candidate skills count, M, N are requireme
 Production Concerns: Flexible naming match (e.g. "Python 3" vs "Python"); casing variations.
 Future Improvements: Embed skill sets and run semantic mapping or taxonomy matches (e.g., "PyTorch" is a subset of "Deep Learning").
 """
+
 from typing import List
+
 
 def is_skill_matched(cand_skill: str, target_skill: str) -> bool:
     """Checks substring matching to handle suffix/prefix variations (e.g. 'ReactJS' matches 'React')."""
@@ -18,10 +20,11 @@ def is_skill_matched(cand_skill: str, target_skill: str) -> bool:
     ts = target_skill.strip().lower()
     return ts in cs or cs in ts
 
+
 def calculate_skill_score(
     candidate_skills: List[str],
     must_have_skills: List[str],
-    nice_to_have_skills: List[str]
+    nice_to_have_skills: List[str],
 ) -> float:
     """
     Computes weighted skill matching score.
@@ -32,7 +35,7 @@ def calculate_skill_score(
     cand_skills_clean = [s.strip().lower() for s in candidate_skills if s.strip()]
     must_clean = [s.strip().lower() for s in must_have_skills if s.strip()]
     nice_clean = [s.strip().lower() for s in nice_to_have_skills if s.strip()]
-    
+
     # S_must calculation
     if not must_clean:
         s_must = 1.0
@@ -43,7 +46,7 @@ def calculate_skill_score(
             if any(is_skill_matched(cand, target) for cand in cand_skills_clean):
                 matched_must += 1
         s_must = matched_must / len(must_clean)
-        
+
     # S_nice calculation
     if not nice_clean:
         s_nice = 1.0
@@ -53,6 +56,6 @@ def calculate_skill_score(
             if any(is_skill_matched(cand, target) for cand in cand_skills_clean):
                 matched_nice += 1
         s_nice = matched_nice / len(nice_clean)
-        
+
     # Combine with weighted formula
     return 0.8 * s_must + 0.2 * s_nice

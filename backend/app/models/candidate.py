@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from typing import List, Dict, Optional
 
+
 class Profile(BaseModel):
     anonymized_name: str
     headline: str
@@ -13,6 +14,7 @@ class Profile(BaseModel):
     current_company_size: str
     current_industry: str
 
+
 class CareerJob(BaseModel):
     company: str
     title: str
@@ -24,6 +26,7 @@ class CareerJob(BaseModel):
     company_size: str
     description: str
 
+
 class Education(BaseModel):
     institution: str
     degree: str
@@ -33,24 +36,33 @@ class Education(BaseModel):
     grade: Optional[str] = None
     tier: str = Field(..., enum=["tier_1", "tier_2", "tier_3", "tier_4", "unknown"])
 
+
 class Skill(BaseModel):
     name: str
-    proficiency: str = Field(..., enum=["beginner", "intermediate", "advanced", "expert"])
+    proficiency: str = Field(
+        ..., enum=["beginner", "intermediate", "advanced", "expert"]
+    )
     endorsements: int = Field(..., ge=0)
     duration_months: int = Field(..., ge=0)
+
 
 class Certification(BaseModel):
     name: str
     issuer: str
     year: int
 
+
 class Language(BaseModel):
     language: str
-    proficiency: str = Field(..., enum=["basic", "conversational", "professional", "native"])
+    proficiency: str = Field(
+        ..., enum=["basic", "conversational", "professional", "native"]
+    )
+
 
 class SalaryRange(BaseModel):
     min: float = Field(..., ge=0)
     max: float = Field(..., ge=0)
+
 
 class RedrobSignals(BaseModel):
     profile_completeness_score: float = Field(..., ge=0, le=100)
@@ -66,7 +78,9 @@ class RedrobSignals(BaseModel):
     endorsements_received: int = Field(..., ge=0)
     notice_period_days: int = Field(..., ge=0, le=180)
     expected_salary_range_inr_lpa: SalaryRange
-    preferred_work_mode: str = Field(..., enum=["remote", "hybrid", "onsite", "flexible"])
+    preferred_work_mode: str = Field(
+        ..., enum=["remote", "hybrid", "onsite", "flexible"]
+    )
     willing_to_relocate: bool
     github_activity_score: float = Field(..., ge=-1, le=100)
     search_appearance_30d: int = Field(..., ge=0)
@@ -76,6 +90,7 @@ class RedrobSignals(BaseModel):
     verified_email: bool
     verified_phone: bool
     linkedin_connected: bool
+
 
 class Candidate(BaseModel):
     candidate_id: str = Field(..., pattern=r"^CAND_[0-9]{7}$")

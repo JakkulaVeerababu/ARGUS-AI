@@ -1,11 +1,14 @@
 from typing import List, Tuple, Dict
 from backend.app.preprocessing.candidate_loader import CandidateLoader
 
+
 class PairBuilder:
     def __init__(self, candidates_file: str = None):
         self.loader = CandidateLoader(candidates_file)
 
-    def build_pairs(self, query: str, candidate_ids: List[str]) -> Tuple[List[Tuple[str, str]], List[str]]:
+    def build_pairs(
+        self, query: str, candidate_ids: List[str]
+    ) -> Tuple[List[Tuple[str, str]], List[str]]:
         """
         Reads candidate profiles for the specified candidate_ids,
         and constructs query-document pairs.
@@ -15,7 +18,7 @@ class PairBuilder:
         """
         target_ids = set(candidate_ids)
         candidate_docs: Dict[str, str] = {}
-        
+
         # Stream candidates and extract document text for matched IDs
         for cand in self.loader.stream_candidates():
             cid = cand.get("candidate_id")
@@ -24,7 +27,7 @@ class PairBuilder:
                 # Early stop if we have found all requested profiles
                 if len(candidate_docs) >= len(target_ids):
                     break
-                    
+
         # Construct pairs in the exact order of candidate_ids
         pairs = []
         ordered_ids = []
@@ -32,8 +35,9 @@ class PairBuilder:
             if cid in candidate_docs:
                 pairs.append((query, candidate_docs[cid]))
                 ordered_ids.append(cid)
-                
+
         return pairs, ordered_ids
+
 
 if __name__ == "__main__":
     builder = PairBuilder()

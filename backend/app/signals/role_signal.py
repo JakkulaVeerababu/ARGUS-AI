@@ -1,21 +1,51 @@
 import re
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 STRONG_TECH_KEYWORDS = [
-    r"\bai\b", r"\bml\b", r"\bmachine learning\b", r"\bnlp\b", r"\bdata scientist\b",
-    r"\bbackend\b", r"\bsoftware\b", r"\bdeveloper\b", r"\bretrieval\b", r"\bsearch\b"
+    r"\bai\b",
+    r"\bml\b",
+    r"\bmachine learning\b",
+    r"\bnlp\b",
+    r"\bdata scientist\b",
+    r"\bbackend\b",
+    r"\bsoftware\b",
+    r"\bdeveloper\b",
+    r"\bretrieval\b",
+    r"\bsearch\b",
 ]
 
 PENALTY_KEYWORDS = [
-    r"\bhr\b", r"\brecruiter\b", r"\bsales\b", r"\bmarketing\b", r"\baccountant\b",
-    r"\bproject manager\b", r"\bproduct manager\b", r"\bscrum master\b"
+    r"\bhr\b",
+    r"\brecruiter\b",
+    r"\bsales\b",
+    r"\bmarketing\b",
+    r"\baccountant\b",
+    r"\bproject manager\b",
+    r"\bproduct manager\b",
+    r"\bscrum master\b",
 ]
 
 CONSULTING_FIRMS = [
-    "tcs", "tata consultancy", "infosys", "wipro", "cognizant", "tech mahindra",
-    "hcl", "l&t", "lti", "capgemini", "accenture", "deloitte", "ey", "pwc", "kpmg",
-    "genpact", "mindtree", "wipro technologies"
+    "tcs",
+    "tata consultancy",
+    "infosys",
+    "wipro",
+    "cognizant",
+    "tech mahindra",
+    "hcl",
+    "l&t",
+    "lti",
+    "capgemini",
+    "accenture",
+    "deloitte",
+    "ey",
+    "pwc",
+    "kpmg",
+    "genpact",
+    "mindtree",
+    "wipro technologies",
 ]
+
 
 def calculate_role_factor(candidate: Dict[str, Any]) -> float:
     """
@@ -24,16 +54,16 @@ def calculate_role_factor(candidate: Dict[str, Any]) -> float:
     """
     profile = candidate.get("profile", {})
     title = profile.get("current_title", "").lower()
-    
+
     # 1. Title Fit Scoring
     title_factor = 0.8  # Default neutral/adjacent
-    
+
     # Check strong tech title match
     for kw in STRONG_TECH_KEYWORDS:
         if re.search(kw, title):
             title_factor = 1.0
             break
-            
+
     # Check penalty non-tech title match
     for kw in PENALTY_KEYWORDS:
         if re.search(kw, title):
@@ -57,7 +87,7 @@ def calculate_role_factor(candidate: Dict[str, Any]) -> float:
             if not matched:
                 exclusive_consulting = False
                 break
-                
+
         # If all companies are IT services, apply 0.5x multiplier
         if exclusive_consulting:
             title_factor *= 0.5

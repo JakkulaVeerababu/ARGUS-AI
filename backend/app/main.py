@@ -6,7 +6,7 @@ import time
 import hashlib
 from typing import List, Dict, Any
 
-from fastapi import FastAPI, HTTPException, Query, Response
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.concurrency import run_in_threadpool
@@ -24,7 +24,7 @@ from backend.app.core.exception_handlers import (
     register_exception_handlers,
     InvalidJobDescriptionError,
     EmptyRetrievalError,
-    CSVProcessingError
+    CSVProcessingError,
 )
 
 from backend.app.jd_parser.parser_engine import JDParserEngine
@@ -36,7 +36,7 @@ app = FastAPI(
     title="Argus AI - Candidate Discovery Engine",
     description="Intelligent search and recommendation backend for the Redrob candidate pool.",
     version="1.0.0",
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # CORS configurations for React frontend compatibility
@@ -63,15 +63,17 @@ class SearchRequest(BaseModel):
 def get_raw_candidate_profile(candidate_id: str) -> Dict[str, Any]:
     """Helper to retrieve a raw candidate JSON profile by ID (Sync I/O)."""
     if not os.path.exists(settings.CANDIDATES_PATH):
-        raise FileNotFoundError(f"Candidates dataset not found at: {settings.CANDIDATES_PATH}")
-        
+        raise FileNotFoundError(
+            f"Candidates dataset not found at: {settings.CANDIDATES_PATH}"
+        )
+
     if settings.CANDIDATES_PATH.endswith(".gz"):
         open_func = gzip.open
         mode = "rt"
     else:
         open_func = open
         mode = "r"
-        
+
     with open_func(settings.CANDIDATES_PATH, mode, encoding="utf-8") as f:
         for line in f:
             line_str = line.strip()
@@ -83,13 +85,17 @@ def get_raw_candidate_profile(candidate_id: str) -> Dict[str, Any]:
     return {}
 
 
-def process_candidates_pipeline(scored: List[Dict[str, Any]], target_ids: set, parsed_jd: Dict[str, Any]) -> List[Dict[str, Any]]:
+def process_candidates_pipeline(
+    scored: List[Dict[str, Any]], target_ids: set, parsed_jd: Dict[str, Any]
+) -> List[Dict[str, Any]]:
     """Heavy synchronous pipeline processing: raw profile stream, gatekeeping, and reasoning creation."""
     safe_candidates = []
     candidate_profiles = {}
 
     if not os.path.exists(settings.CANDIDATES_PATH):
-        raise FileNotFoundError(f"Candidates dataset not found at: {settings.CANDIDATES_PATH}")
+        raise FileNotFoundError(
+            f"Candidates dataset not found at: {settings.CANDIDATES_PATH}"
+        )
 
     if settings.CANDIDATES_PATH.endswith(".gz"):
         open_func = gzip.open
@@ -121,7 +127,9 @@ def process_candidates_pipeline(scored: List[Dict[str, Any]], target_ids: set, p
             continue
 
         # Add reasoning using the Reasoning V2 builder
-        c_record["reasoning"] = build_candidate_reasoning_v2(cand, len(safe_candidates) + 1, parsed_jd)
+        c_record["reasoning"] = build_candidate_reasoning_v2(
+            cand, len(safe_candidates) + 1, parsed_jd
+        )
         safe_candidates.append(c_record)
 
         if len(safe_candidates) >= 50:  # Return top 50 in search UI
@@ -138,7 +146,7 @@ async def run_search(request: SearchRequest):
     and returns the top recommendations. Utilizes background threadpool and caching.
     """
     start_time = time.time()
-    
+
     # Validation
     if not request.job_description.strip():
         metrics_collector.record_request(time.time() - start_time, success=False)
@@ -160,7 +168,9 @@ async def run_search(request: SearchRequest):
         logger.error(f"[API] Cache read failure: {e}")
 
     metrics_collector.record_cache_miss()
-    logger.info(f"[API] Cache miss. Initiating search pipeline for request hash: {jd_hash}")
+    logger.info(
+        f"[API] Cache miss. Initiating search pipeline for request hash: {jd_hash}"
+    )
 
     temp_jd_path = os.path.abspath(f"./data/temp_job_description_{jd_hash}.txt")
     try:
@@ -168,12 +178,13 @@ async def run_search(request: SearchRequest):
         def write_temp_jd():
             with open(temp_jd_path, "w", encoding="utf-8") as f:
                 f.write(request.job_description)
+
         await run_in_threadpool(write_temp_jd)
 
         # 1. Parse JD
         parser = JDParserEngine()
         parsed_jd = await run_in_threadpool(parser.parse, temp_jd_path)
-        
+
         query_parts = []
         if parsed_jd.get("titles"):
             query_parts.extend(parsed_jd["titles"])
@@ -182,10 +193,12 @@ async def run_search(request: SearchRequest):
         if parsed_jd.get("nice_to_have_skills"):
             query_parts.extend(parsed_jd["nice_to_have_skills"])
         query_text = " ".join(query_parts)
-        
+
         if not query_text.strip():
-            raise InvalidJobDescriptionError("Unable to extract valid search criteria from Job Description.")
-            
+            raise InvalidJobDescriptionError(
+                "Unable to extract valid search criteria from Job Description."
+            )
+
         # Retrieve singleton warmed services from ModelRegistry
         registry = ModelRegistry()
         hybrid_searcher = registry.hybrid_searcher
@@ -199,13 +212,13 @@ async def run_search(request: SearchRequest):
             query_text,
             top_k_branch=settings.TOP_K_BRANCH,
             final_top_n=settings.FINAL_TOP_N,
-            k_rrf=settings.RRF_K
+            k_rrf=settings.RRF_K,
         )
         metrics_collector.record_inference(time.time() - ret_start)
-        
+
         if not retrieved:
             raise EmptyRetrievalError("No matching candidates found for the query.")
-            
+
         # 3. Cross-Encoder Reranking
         logger.info(f"[API] Reranking {len(retrieved)} retrieved candidates...")
         rank_start = time.time()
@@ -215,15 +228,19 @@ async def run_search(request: SearchRequest):
         )
         metrics_collector.record_inference(time.time() - rank_start)
         logger.info(f"[RANKING] Successfully reranked top {len(reranked)} candidates.")
-        
+
         # 4. Business Signal Scoring
         business_scorer = BusinessScorer(candidates_file=settings.CANDIDATES_PATH)
-        scored = await run_in_threadpool(business_scorer.score_candidates, reranked, top_n=settings.RERANK_N)
-        
+        scored = await run_in_threadpool(
+            business_scorer.score_candidates, reranked, top_n=settings.RERANK_N
+        )
+
         # 5. Gatekeeper & Honeypot Filtering, Reasoning Creation
         target_ids = set([c["candidate_id"] for c in scored])
-        safe_candidates = await run_in_threadpool(process_candidates_pipeline, scored, target_ids, parsed_jd)
-        
+        safe_candidates = await run_in_threadpool(
+            process_candidates_pipeline, scored, target_ids, parsed_jd
+        )
+
         results = {"success": True, "results": safe_candidates}
 
         # Cache final results
@@ -234,7 +251,7 @@ async def run_search(request: SearchRequest):
 
         metrics_collector.record_request(time.time() - start_time, success=True)
         return results
-        
+
     except (InvalidJobDescriptionError, EmptyRetrievalError) as e:
         metrics_collector.record_request(time.time() - start_time, success=False)
         raise e
@@ -247,6 +264,7 @@ async def run_search(request: SearchRequest):
         def clean_temp():
             if os.path.exists(temp_jd_path):
                 os.remove(temp_jd_path)
+
         await run_in_threadpool(clean_temp)
 
 
@@ -272,7 +290,7 @@ async def get_candidate_details(cid: str):
         if not cand:
             metrics_collector.record_request(time.time() - start_time, success=False)
             raise HTTPException(status_code=404, detail="Candidate not found.")
-        
+
         try:
             await cache.set(cache_key, cand)
         except Exception as e:
@@ -291,28 +309,32 @@ def load_submission_rankings() -> List[Dict[str, Any]]:
     """Heavy synchronous loading and merging of generated rankings and profile details."""
     if not os.path.exists(settings.SUBMISSION_PATH):
         raise CSVProcessingError("Submission rankings file has not been generated yet.")
-        
+
     rankings = []
     target_ids = []
-    
+
     # 1. Read submission CSV
     with open(settings.SUBMISSION_PATH, mode="r", encoding="utf-8") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            rankings.append({
-                "candidate_id": row["candidate_id"],
-                "rank": int(row["rank"]),
-                "score": float(row["score"]),
-                "reasoning": row["reasoning"]
-            })
+            rankings.append(
+                {
+                    "candidate_id": row["candidate_id"],
+                    "rank": int(row["rank"]),
+                    "score": float(row["score"]),
+                    "reasoning": row["reasoning"],
+                }
+            )
             target_ids.append(row["candidate_id"])
-            
+
     # 2. Load basic profile info for rendering
     target_set = set(target_ids)
     candidate_profiles = {}
-    
+
     if not os.path.exists(settings.CANDIDATES_PATH):
-        raise FileNotFoundError(f"Candidates file not found at {settings.CANDIDATES_PATH}")
+        raise FileNotFoundError(
+            f"Candidates file not found at {settings.CANDIDATES_PATH}"
+        )
 
     if settings.CANDIDATES_PATH.endswith(".gz"):
         open_func = gzip.open
@@ -320,7 +342,7 @@ def load_submission_rankings() -> List[Dict[str, Any]]:
     else:
         open_func = open
         mode = "r"
-        
+
     with open_func(settings.CANDIDATES_PATH, mode, encoding="utf-8") as f:
         for line in f:
             line_str = line.strip()
@@ -338,17 +360,17 @@ def load_submission_rankings() -> List[Dict[str, Any]]:
                     "location": profile.get("location", ""),
                     "github_score": signals.get("github_activity_score", -1.0),
                     "response_rate": signals.get("recruiter_response_rate", 0.0),
-                    "notice_period": signals.get("notice_period_days", 0)
+                    "notice_period": signals.get("notice_period_days", 0),
                 }
                 if len(candidate_profiles) >= len(target_set):
                     break
-                    
+
     # Merge details
     for row in rankings:
         cid = row["candidate_id"]
         info = candidate_profiles.get(cid, {})
         row.update(info)
-        
+
     return rankings
 
 
@@ -406,13 +428,13 @@ async def get_analytics_distribution():
     metrics_collector.record_cache_miss()
     try:
         rankings = await get_submission_rankings()
-        
+
         exp_bins = {"0-4 yrs": 0, "5-9 yrs": 0, "10+ yrs": 0}
         notice_bins = {"<30 days": 0, "30-60 days": 0, "61-90 days": 0, ">90 days": 0}
         locations = {}
-        
+
         total_match = 0.0
-        
+
         for c in rankings:
             # Experience
             exp = c.get("experience", 0.0)
@@ -422,7 +444,7 @@ async def get_analytics_distribution():
                 exp_bins["5-9 yrs"] += 1
             else:
                 exp_bins["10+ yrs"] += 1
-                
+
             # Notice Period
             notice = c.get("notice_period", 0)
             if notice < 30:
@@ -433,29 +455,35 @@ async def get_analytics_distribution():
                 notice_bins["61-90 days"] += 1
             else:
                 notice_bins[">90 days"] += 1
-                
+
             # Location
             loc = c.get("location", "Unknown")
             city = loc.split(",")[0].strip().title()
             locations[city] = locations.get(city, 0) + 1
-            
+
             # Match Score
             total_match += c.get("score", 0.0)
-            
+
         # Top 5 locations
         sorted_locs = sorted(locations.items(), key=lambda x: x[1], reverse=True)[:5]
-        
+
         analytics_result = {
             "kpis": {
                 "total_candidates": len(rankings),
                 "average_match_score": total_match / len(rankings) if rankings else 0.0,
-                "top_locations": [{"city": city, "count": count} for city, count in sorted_locs]
+                "top_locations": [
+                    {"city": city, "count": count} for city, count in sorted_locs
+                ],
             },
             "distributions": {
                 "experience": [{"range": k, "count": v} for k, v in exp_bins.items()],
-                "notice_period": [{"timeline": k, "count": v} for k, v in notice_bins.items()],
-                "locations": [{"name": city, "value": count} for city, count in sorted_locs]
-            }
+                "notice_period": [
+                    {"timeline": k, "count": v} for k, v in notice_bins.items()
+                ],
+                "locations": [
+                    {"name": city, "value": count} for city, count in sorted_locs
+                ],
+            },
         }
 
         try:
@@ -475,19 +503,29 @@ async def get_analytics_distribution():
 async def download_submission_file():
     """Serves the generated submission.csv directly as a file download (Async checks)."""
     start_time = time.time()
-    
+
     def verify_file_exists():
         return os.path.exists(settings.SUBMISSION_PATH)
-        
+
     exists = await run_in_threadpool(verify_file_exists)
     if not exists:
         metrics_collector.record_request(time.time() - start_time, success=False)
-        raise HTTPException(status_code=404, detail="Submission file has not been generated yet.")
-        
+        raise HTTPException(
+            status_code=404, detail="Submission file has not been generated yet."
+        )
+
     metrics_collector.record_request(time.time() - start_time, success=True)
-    return FileResponse(path=settings.SUBMISSION_PATH, filename="submission.csv", media_type="text/csv")
+    return FileResponse(
+        path=settings.SUBMISSION_PATH, filename="submission.csv", media_type="text/csv"
+    )
 
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("backend.app.main:app", host=settings.HOST, port=settings.PORT, reload=settings.DEBUG)
+
+    uvicorn.run(
+        "backend.app.main:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=settings.DEBUG,
+    )

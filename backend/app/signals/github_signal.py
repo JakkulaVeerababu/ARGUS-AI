@@ -1,5 +1,6 @@
 from typing import Dict, Any
 
+
 def calculate_github_factor(candidate: Dict[str, Any]) -> float:
     """
     Computes GitHub multiplier based on activity score.
@@ -8,9 +9,9 @@ def calculate_github_factor(candidate: Dict[str, Any]) -> float:
     """
     signals = candidate.get("redrob_signals", {})
     github_score = signals.get("github_activity_score", -1.0)
-    
+
     if github_score < 0.0:
         return 1.0
-        
+
     boost = 0.1 * (github_score / 100.0)
     return 1.0 + boost

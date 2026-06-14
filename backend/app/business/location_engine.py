@@ -11,6 +11,7 @@ Complexity: O(N * M) string matching where N is number of targets, M is location
 Production Concerns: Variations in city spellings (e.g. Bengaluru vs Bangalore); regional grouping definitions (e.g. Noida in NCR).
 Future Improvements: Integrate database-backed geocoding to resolve distances in kilometers.
 """
+
 from typing import List
 
 # Regional equivalences maps (e.g., NCR includes Delhi, Noida, Gurgaon, Gurugram, Ghaziabad, Faridabad)
@@ -23,14 +24,15 @@ REGIONAL_EQUIVALENTS = {
     "bangalore": ["bengaluru"],
     "bengaluru": ["bangalore"],
     "bombay": ["mumbai"],
-    "mumbai": ["bombay"]
+    "mumbai": ["bombay"],
 }
+
 
 def calculate_location_score(
     candidate_location: str,
     target_locations: List[str],
     willing_to_relocate: bool = False,
-    candidate_is_remote: bool = False
+    candidate_is_remote: bool = False,
 ) -> float:
     """
     Computes location matching score.
@@ -44,25 +46,25 @@ def calculate_location_score(
     # Normalize inputs
     cand_loc_clean = candidate_location.strip().lower()
     targets_clean = [t.strip().lower() for t in target_locations if t.strip()]
-    
+
     if not targets_clean:
         return 1.0
-        
+
     # Check remote compatibility
     is_remote_position = "remote" in targets_clean
     if is_remote_position and candidate_is_remote:
         return 1.0
-        
+
     # Check exact match or substring matches
     is_exact_match = False
     for target in targets_clean:
         if target in cand_loc_clean or cand_loc_clean in target:
             is_exact_match = True
             break
-            
+
     if is_exact_match:
         return 1.0
-        
+
     # Check regional matches (NCR or Bangalore/Bengaluru)
     is_regional_match = False
     for target in targets_clean:
@@ -73,12 +75,12 @@ def calculate_location_score(
                 break
         if is_regional_match:
             break
-            
+
     if is_regional_match:
         return 0.95
-        
+
     # Check relocation suitability
     if willing_to_relocate:
         return 0.85
-        
+
     return 0.50

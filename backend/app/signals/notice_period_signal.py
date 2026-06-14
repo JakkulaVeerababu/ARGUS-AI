@@ -1,5 +1,6 @@
 from typing import Dict, Any
 
+
 def calculate_notice_factor(candidate: Dict[str, Any]) -> float:
     """
     Computes notice period multiplier based on notice_period_days.
@@ -9,7 +10,7 @@ def calculate_notice_factor(candidate: Dict[str, Any]) -> float:
     """
     signals = candidate.get("redrob_signals", {})
     notice_days = signals.get("notice_period_days", 0)
-    
+
     if notice_days <= 60:
         return 1.0
     elif notice_days <= 90:

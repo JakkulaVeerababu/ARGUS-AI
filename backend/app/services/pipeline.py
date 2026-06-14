@@ -5,6 +5,7 @@ import time
 from typing import Generator, Dict, Any, List
 from backend.app.models.candidate import Candidate
 
+
 class DatasetLoader:
     def __init__(self, filepath: str):
         self.filepath = filepath
@@ -37,6 +38,7 @@ class DatasetLoader:
                 break
         return candidates
 
+
 def compile_candidate_document(raw_cand: Dict[str, Any]) -> str:
     """
     Compiles candidate profiles into a single semantic document string.
@@ -47,7 +49,7 @@ def compile_candidate_document(raw_cand: Dict[str, Any]) -> str:
     title = profile.get("current_title", "")
     headline = profile.get("headline", "")
     summary = profile.get("summary", "")
-    
+
     # Skills compilation (including duration and proficiency for query matching)
     skills = raw_cand.get("skills", [])
     skill_parts = []
@@ -57,7 +59,7 @@ def compile_candidate_document(raw_cand: Dict[str, Any]) -> str:
         dur = s.get("duration_months", 0)
         skill_parts.append(f"{name} ({prof}, {dur}m)")
     skills_str = ", ".join(skill_parts)
-    
+
     # Past career history (critical for identifying product experience vs. keyword stuffer)
     career = raw_cand.get("career_history", [])
     history_parts = []
@@ -67,7 +69,7 @@ def compile_candidate_document(raw_cand: Dict[str, Any]) -> str:
         j_desc = j.get("description", "")
         history_parts.append(f"Held role of {j_title} at {j_company}: {j_desc}")
     history_str = " | ".join(history_parts)
-    
+
     # Academic history
     education = raw_cand.get("education", [])
     edu_parts = []
@@ -77,7 +79,7 @@ def compile_candidate_document(raw_cand: Dict[str, Any]) -> str:
         inst = e.get("institution", "")
         edu_parts.append(f"{deg} in {field} from {inst}")
     edu_str = ", ".join(edu_parts)
-    
+
     # Assemble unified representation
     doc_parts = [
         f"Candidate Title: {title}.",
@@ -85,18 +87,21 @@ def compile_candidate_document(raw_cand: Dict[str, Any]) -> str:
         f"Summary: {summary}.",
         f"Skills List: {skills_str}.",
         f"Experience History: {history_str}.",
-        f"Education History: {edu_str}."
+        f"Education History: {edu_str}.",
     ]
     return " ".join(doc_parts)
 
+
 def test_preprocessing():
     """Benchmarks preprocessing speed and logs document output format."""
-    default_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../data/candidates.jsonl"))
+    default_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "../../../data/candidates.jsonl")
+    )
     loader = DatasetLoader(default_path)
-    
+
     print("Testing candidate text compilation...")
     start_time = time.time()
-    
+
     count = 0
     sample_doc = ""
     for raw in loader.stream_candidates():
@@ -106,15 +111,16 @@ def test_preprocessing():
             sample_doc = doc
         if count >= 10000:
             break
-            
+
     end_time = time.time()
     elapsed = end_time - start_time
-    
+
     print("\n--- Preprocessing Test Results ---")
     print(f"Compiled {count} candidate documents in {elapsed:.2f} seconds.")
     print(f"Processing throughput: {count / elapsed:.1f} documents/sec")
-    print(f"\nSample Document Output (First Candidate):")
+    print("\nSample Document Output (First Candidate):")
     print(sample_doc[:1200] + "...")
+
 
 if __name__ == "__main__":
     test_preprocessing()
