@@ -8,7 +8,7 @@ import {
   Calendar,
   Briefcase,
   MapPin,
-  Github,
+  Code2,
   TrendingUp,
   X,
   ChevronRight,
@@ -407,7 +407,7 @@ export const Rankings: React.FC = () => {
                     </div>
                     <div className="p-3 bg-gray-50 rounded-lg border border-gray-100">
                       <div className="flex items-center space-x-1 text-gray-400 mb-1">
-                        <Github size={11} />
+                        <Code2 size={11} />
                         <span className="text-[10px] uppercase tracking-wider font-medium">
                           GitHub
                         </span>
