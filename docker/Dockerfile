@@ -1,5 +1,5 @@
 # Build stage
-FROM python:3.12-slim AS builder
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
@@ -19,7 +19,7 @@ COPY backend /app/backend
 RUN python -m backend.app.inference.onnx_converter
 
 # Production stage
-FROM python:3.12-slim AS runner
+FROM python:3.11-slim AS runner
 
 WORKDIR /app
 
