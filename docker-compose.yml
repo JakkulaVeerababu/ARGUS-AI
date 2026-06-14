@@ -3,8 +3,8 @@ version: "3.8"
 services:
   backend:
     build:
-      context: ..
-      dockerfile: docker/Dockerfile
+      context: .
+      dockerfile: Dockerfile
     container_name: argus-ai-backend
     ports:
       - "8000:8000"
@@ -17,8 +17,8 @@ services:
       - RERANK_K=300
       - FINAL_K=100
     volumes:
-      - ../artifacts:/app/artifacts
-      - ../models:/app/models
-      - ../data:/app/data
-      - ../logs:/app/logs
+      - ./artifacts:/app/artifacts
+      - ./models:/app/models
+      - ./data:/app/data
+      - ./logs:/app/logs
     restart: unless-stopped
