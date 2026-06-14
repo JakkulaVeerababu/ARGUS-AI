@@ -1,19 +1,29 @@
+"""
+Purpose: Semantic search retriever utilizing FAISS index and shared SentenceTransformer.
+Inputs:
+    - model_name: str (embedding model name)
+    - index_path: str (path to FAISS binary)
+    - ids_path: Optional[str] (unused, mapping loaded directly from SQLite)
+Outputs:
+    - SemanticSearch instance exposing search queries
+Complexity: O(M) query embedding generation, O(log N) vector space search.
+Production Concerns: Ensure SQLite connection singleton is initialized; memory-safe mapping.
+Future Improvements: Use quantization index configurations to optimize vector search speed at scale.
+"""
 import os
 import time
-import pickle
 from typing import List, Tuple
 import numpy as np
 import faiss
 from sentence_transformers import SentenceTransformer
+
+from backend.app.database.sqlite_manager import SQLiteManager
 
 class SemanticSearch:
     def __init__(self, model_name: str = "all-MiniLM-L6-v2", index_path: str = None, ids_path: str = None):
         self.model_name = model_name
         self.index_path = index_path or os.path.abspath(
             os.path.join(os.path.dirname(__file__), "../../../artifacts/faiss_index.bin")
-        )
-        self.ids_path = ids_path or os.path.abspath(
-            os.path.join(os.path.dirname(__file__), "../../../artifacts/candidate_ids.pkl")
         )
         self.model = None
         self.index = None
@@ -23,7 +33,7 @@ class SemanticSearch:
         self.load_resources()
 
     def load_resources(self):
-        """Loads SentenceTransformer and FAISS index into memory."""
+        """Loads SentenceTransformer and FAISS index into memory, fetching mapping IDs from SQLite."""
         # 1. Load sentence-transformers model on CPU
         print(f"Loading Semantic model '{self.model_name}' on CPU...")
         start_time = time.time()
@@ -35,11 +45,11 @@ class SemanticSearch:
         print(f"Loading FAISS index from: {self.index_path}...")
         self.index = faiss.read_index(self.index_path)
         
-        # 3. Load Candidate IDs mapping
-        if not os.path.exists(self.ids_path):
-            raise FileNotFoundError(f"Candidate IDs file not found at: {self.ids_path}")
-        with open(self.ids_path, "rb") as f:
-            self.candidate_ids = pickle.load(f)
+        # 3. Load Candidate IDs mapping directly from SQLite (eliminates candidate_ids.pkl)
+        print("Fetching candidate ID mappings from SQLite...")
+        db = SQLiteManager()
+        rows = db.execute_read("SELECT candidate_id FROM candidates ORDER BY ROWID")
+        self.candidate_ids = [row["candidate_id"] for row in rows]
             
         print(f"Semantic search resources loaded in {time.time() - start_time:.2f}s. Total vectors: {self.index.ntotal}")
 
@@ -64,18 +74,8 @@ class SemanticSearch:
         for score, idx in zip(scores[0], indices[0]):
             if idx == -1:  # FAISS padding/not found indicator
                 continue
-            cid = self.candidate_ids[idx]
-            results.append((cid, float(score)))
+            if idx < len(self.candidate_ids):
+                cid = self.candidate_ids[idx]
+                results.append((cid, float(score)))
             
         return results
-
-if __name__ == "__main__":
-    try:
-        searcher = SemanticSearch()
-        query = "python faiss vector search retrieval ndcg"
-        results = searcher.search(query, top_k=5)
-        print(f"\nSemantic Search Top 5 for '{query}':")
-        for cid, score in results:
-            print(f"  {cid} - Cosine Similarity: {score:.4f}")
-    except Exception as e:
-        print(f"Error: {e}")

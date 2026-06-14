@@ -20,6 +20,8 @@ data/*.jsonl.gz
 data/*.csv
 data/*.xlsx
 data/*.docx
+data/*.db
+*.db
 artifacts/*.npy
 artifacts/*.pkl
 artifacts/*.bin
