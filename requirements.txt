@@ -15,4 +15,5 @@ redis
 transformers
 onnxruntime
 optimum
+optimum-onnx
 httpx
