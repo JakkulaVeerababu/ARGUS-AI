@@ -1,3 +1,40 @@
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+exclude = '''
+/(
+    \.git
+  | \.venv
+  | venv
+  | node_modules
+  | frontend
+  | dist
+  | build
+  | \.cache
+  | models
+  | artifacts
+  | data
+  | \[PUB\].*
+)/
+'''
+
+[tool.ruff]
+line-length = 88
+exclude = [
+    ".git",
+    ".venv",
+    "venv",
+    "node_modules",
+    "frontend",
+    "dist",
+    "build",
+    "models",
+    "artifacts",
+    "data",
+    "[PUB] India_runs_data_and_ai_challenge",
+]
+
