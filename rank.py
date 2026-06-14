@@ -9,7 +9,7 @@ from backend.app.retrieval.hybrid_search import HybridSearcher
 from backend.app.ranking.reranker import CrossEncoderRerankingManager
 from backend.app.signals.final_score import BusinessScorer
 from backend.app.honeypots.gatekeeper import evaluate_candidate_risk
-from backend.app.reasoning.reason_builder import build_candidate_reasoning
+from backend.app.reasoning_v2.reason_builder_v2 import build_candidate_reasoning_v2
 
 def run_ranking_pipeline(candidates_path: str, jd_path: str, output_csv: str):
     """
@@ -175,7 +175,7 @@ def run_ranking_pipeline(candidates_path: str, jd_path: str, output_csv: str):
             cid = cand_record["candidate_id"]
             score = cand_record["final_score"]
             cand = candidate_profiles.get(cid)
-            reason = build_candidate_reasoning(cand, rank)
+            reason = build_candidate_reasoning_v2(cand, rank, parsed_jd)
             writer.writerow([cid, rank, f"{score:.6f}", reason])
             
     print("CSV generated successfully.")

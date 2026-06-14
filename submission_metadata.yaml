@@ -1,0 +1,45 @@
+# Redrob Hackathon — Submission Metadata
+team_name: "Argus-AI-Team"
+
+primary_contact:
+  name: "Jakkula Veerababu"
+  email: "veerababu.jakkula@example.com"
+  phone: "+91-XXXXXXXXXX"
+
+team_members:
+  - name: "Jakkula Veerababu"
+    email: "veerababu.jakkula@example.com"
+    role: "ML Infrastructure & Backend Engineer"
+
+github_repo: "https://github.com/JakkulaVeerababu/ARGUS-AI-"
+sandbox_link: "https://huggingface.co/spaces/veerababu/argus-ai-ranker"
+
+reproduce_command: "python rank.py --candidates ./data/candidates.jsonl --out ./submission.csv"
+
+compute:
+  platform: "Windows CPU Machine"
+  cpu_cores: 8
+  ram_gb: 16
+  python_version: "3.11.0"
+  os: "Windows 11"
+  uses_gpu_for_inference: false
+  has_network_during_ranking: false
+  pre_computation_required: false
+  pre_computation_time_minutes: 0
+
+ai_tools_used:
+  - "Claude"
+  - "Gemini"
+
+ai_usage_summary: |
+  Used Claude for architectural guidance and code design. Used Gemini for production engineering, setting up caches, and unit testing the system.
+
+methodology_summary: |
+  Hybrid search retrieval merging SQLite FTS5 (lexical) and FAISS (semantic) branches using Reciprocal Rank Fusion (RRF), followed by a Cross-Encoder sequence-classification reranking model and a multi-factor Business Signal Modifier. Includes gatekeeper honeypot filters and automated reasoning generation.
+
+declarations:
+  read_submission_spec: true
+  code_is_original_work: true
+  no_collusion: true
+  honeypot_check_done: true
+  reproduction_tested: true

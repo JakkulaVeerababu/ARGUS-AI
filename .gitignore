@@ -36,3 +36,7 @@ artifacts/*.bin
 # Model cache folders
 .cache/
 huggingface/
+models/*/
+\[PUB\] India_runs_data_and_ai_challenge/
+data/argus_ai.db-shm
+data/argus_ai.db-wal

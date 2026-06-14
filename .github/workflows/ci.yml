@@ -55,3 +55,5 @@ jobs:
           file: docker/Dockerfile
           push: false
           tags: argus-ai-backend:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

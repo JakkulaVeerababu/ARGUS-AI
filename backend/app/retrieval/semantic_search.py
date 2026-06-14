@@ -15,7 +15,7 @@ import time
 from typing import List, Tuple
 import numpy as np
 import faiss
-from sentence_transformers import SentenceTransformer
+from backend.app.inference.batch_scheduler import EmbeddingScheduler
 
 from backend.app.database.sqlite_manager import SQLiteManager
 
@@ -37,7 +37,7 @@ class SemanticSearch:
         # 1. Load sentence-transformers model on CPU
         print(f"Loading Semantic model '{self.model_name}' on CPU...")
         start_time = time.time()
-        self.model = SentenceTransformer(self.model_name, device="cpu")
+        self.model = EmbeddingScheduler()
         
         # 2. Load FAISS index
         if not os.path.exists(self.index_path):
