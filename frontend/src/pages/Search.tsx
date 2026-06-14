@@ -34,7 +34,7 @@ export const Search: React.FC = () => {
       }
     } catch (err: any) {
       console.error(err);
-      setError(err.message || "An error occurred during search. Make sure FastAPI server is running.");
+      setError(err.message || "An error occurred during search. Please verify the connection to the recommendation service.");
     } finally {
       setLoading(false);
     }
@@ -120,10 +120,10 @@ export const Search: React.FC = () => {
                   <span>Real-time Top {candidates.length} Recommendations</span>
                 </div>
                 <span className="text-xs font-medium bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
-                  Sigmoid Score Scaled
+                  Calibrated Relevance
                 </span>
               </div>
-              <div className="divide-y divide-gray-100 max-h-[460px] overflow-y-auto">
+              <div className="divide-y divide-gray-100 max-h-[460px] overflow-y-auto font-sans">
                 {candidates.map((cand, idx) => (
                   <div 
                     key={cand.candidate_id}
@@ -145,7 +145,7 @@ export const Search: React.FC = () => {
                           {cand.final_score.toFixed(4)}
                         </div>
                         <div className="text-[10px] text-gray-400">
-                          CE: {cand.cross_encoder_score.toFixed(2)}
+                          Raw Match: {cand.cross_encoder_score.toFixed(2)}
                         </div>
                       </div>
                       <ChevronRight size={16} className="text-gray-400" />

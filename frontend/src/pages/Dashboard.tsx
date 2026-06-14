@@ -43,12 +43,12 @@ export const Dashboard: React.FC = () => {
           <div className={`w-3 h-3 rounded-full ${isBackendHealthy ? "bg-green-500 animate-pulse" : "bg-red-500"}`} />
           <div>
             <p className="text-sm font-medium text-gray-800">
-              {isBackendHealthy ? "System Online" : "System Offline"}
+              {isBackendHealthy ? "Sourcing Feed Connected" : "Sourcing Feed Disconnected"}
             </p>
             <p className="text-xs text-gray-500">
               {isBackendHealthy 
-                ? "FastAPI server is connected and responding to queries on port 8000." 
-                : "Cannot connect to the backend API. Please run uvicorn server."}
+                ? "Candidate discovery pipeline is synchronized and actively listening for scoring queries." 
+                : "The recommendation engine is currently offline. Please verify the backend service connection."}
             </p>
           </div>
         </div>
