@@ -50,17 +50,19 @@ $env:PYTHONPATH="."; .\.venv\Scripts\python.exe ./data/validate_submission.py ./
 > - Real, factual explanation reasoning under 40-80 words constraints
 
 ### 2.2 Automated Test Suite
-We wrote 14 test cases under the `tests/` directory covering:
+We wrote 39 test cases under the `tests/` directory covering:
 - **Lexical/BM25 Indexing & RRF Fusion**
 - **Sigmoid Logit Mapping & Business Scoring Pipeline**
-- **Reasoning Template Engine Length Limits**
+- **Reasoning Template Engine Length Limits & Phrase Selection**
 - **Honeypots Checks (Salary, timeline anomalies, expert skills)**
 - **Tie-breakers & Format constraints**
+- **SQLite Database & FTS5 Indexing / Retrieval Layer**
+- **FastAPI Endpoints (Health, search, rankings, analytics)**
 
 **Pytest Run Result:**
 ```bash
 $env:PYTHONPATH="."; .\.venv\Scripts\pytest.exe
-======================= 14 passed, 2 warnings in 18.40s =======================
+======================= 39 passed, 2 warnings in 8.71s =======================
 ```
 All unit tests pass successfully!
 
@@ -99,7 +101,7 @@ Recharts graphs detailing experience bands, notice timelines, and candidate loca
 ---
 
 ## 4. Productionization Assets Created
-- `docker/Dockerfile`: Multi-stage Python 3.12 build configuring model cache directories.
+- `docker/Dockerfile`: Multi-stage Python 3.11 build configuring model cache directories (optimized for faiss-cpu compatibility).
 - `docker/docker-compose.yml`: Mounts logs, artifacts, and caching volumes.
 - `.github/workflows/ci.yml`: GitHub Actions pipeline verifying formatting, lint rules (ruff), test runs, and container packaging.
 - `backend/app/utils/logger.py`: Configures structured file log handlers (`logs/api.log`, `logs/ranking.log`, `logs/errors.log`) using `loguru`.
