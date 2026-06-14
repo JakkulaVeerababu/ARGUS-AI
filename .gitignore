@@ -1,0 +1,36 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Node / frontend builds
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Data and Artifacts (ignore raw dataset, keep code)
+data/*.jsonl
+data/*.jsonl.gz
+data/*.csv
+data/*.xlsx
+data/*.docx
+artifacts/*.npy
+artifacts/*.pkl
+artifacts/*.bin
+!artifacts/.gitkeep
+!models/.gitkeep
+
+# IDE files
+.vscode/
+.idea/
+.DS_Store
+
+# Model cache folders
+.cache/
+huggingface/
