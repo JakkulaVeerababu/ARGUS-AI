@@ -43,7 +43,7 @@ jobs:
           pip install rank-bm25==0.2.2
           pip install sentence-transformers==2.2.2
           pip install faiss-cpu==1.7.4
-          pip install transformers onnxruntime
+          pip install transformers onnxruntime optimum
 
       - name: Run Tests (Pytest)
         run: pytest tests/ -v --tb=short
