@@ -8,10 +8,13 @@ class JDLoader:
         )
 
     def load_jd(self, file_path: str = None) -> str:
-        """Loads and returns the text representation of the JD docx file."""
+        """Loads and returns the text representation of the JD docx or txt file."""
         target_path = file_path or self.default_path
         if not os.path.exists(target_path):
             raise FileNotFoundError(f"Job Description file not found at: {target_path}")
+        if target_path.lower().endswith(".txt"):
+            with open(target_path, "r", encoding="utf-8") as f:
+                return f.read()
         return parse_docx_text(target_path)
 
 if __name__ == "__main__":
