@@ -90,7 +90,6 @@ def setup_test_database():
             pass
 
 
-
 def test_sqlite_singleton_connection():
     # SQLiteManager should be a Singleton
     m1 = SQLiteManager(TEST_DB_PATH)

@@ -40,3 +40,9 @@ models/*/
 \[PUB\] India_runs_data_and_ai_challenge/
 data/argus_ai.db-shm
 data/argus_ai.db-wal
+
+# Temp files created by the API
+data/temp_job_description_*.txt
+
+# Log files
+logs/*.log

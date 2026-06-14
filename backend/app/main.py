@@ -172,10 +172,12 @@ async def run_search(request: SearchRequest):
         f"[API] Cache miss. Initiating search pipeline for request hash: {jd_hash}"
     )
 
-    temp_jd_path = os.path.abspath(f"./data/temp_job_description_{jd_hash}.txt")
+    temp_dir = os.path.join(settings.BASE_DIR, "data")
+    temp_jd_path = os.path.join(temp_dir, f"temp_job_description_{jd_hash}.txt")
     try:
-        # Save temp job description (I/O block)
+        # Save temp job description (I/O block) — using absolute BASE_DIR path
         def write_temp_jd():
+            os.makedirs(temp_dir, exist_ok=True)
             with open(temp_jd_path, "w", encoding="utf-8") as f:
                 f.write(request.job_description)
 
